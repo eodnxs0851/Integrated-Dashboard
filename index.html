@@ -78,11 +78,12 @@
         .nav-menu a:hover { color: var(--k-black); }
         .nav-menu span { font-size: 14px; font-weight: 600; color: var(--k-gray-dark); margin-left: 24px; cursor: pointer; transition: color 0.2s; }
 
-        /* [Hero Section - 격자 디자인 적용됨] */
+        /* [Hero Section - 격자 디자인 수정됨 (전체 너비 적용)] */
         .hero { 
-            padding: 160px 40px 100px; 
-            max-width: 1200px; 
-            margin: 0 auto;
+            /* padding 및 max-width 제거 또는 수정하여 화면 전체 사용 */
+            width: 100%;
+            padding: 160px 0 100px; /* 좌우 padding 제거 */
+            margin: 0;
             position: relative;
             /* 배경 격자 패턴 (Grid Pattern) */
             background-image: 
@@ -90,6 +91,13 @@
                 linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px);
             background-size: 40px 40px; /* 격자 크기 */
         }
+        /* 내부 컨텐츠 정렬을 위한 컨테이너 추가 */
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px; /* 기존 hero의 padding을 여기로 이동 */
+        }
+
         /* 텍스트 가독성을 위해 하단 그라데이션 추가 */
         .hero::after {
             content: '';
@@ -220,6 +228,9 @@
         .post-subject { font-size: 16px; font-weight: 700; margin-bottom: 5px; word-break: break-all; }
         .post-target { font-size: 14px; color: #555; }
         .post-target span { font-weight: 600; color: var(--k-black); }
+        /* 작성자 표시 스타일 추가 */
+        .post-author { font-size: 12px; color: #666; font-weight: 500; margin-left: 8px; }
+        
         .btn-delete {
             font-size: 11px; color: #999; cursor: pointer; border: none; background: none; margin-left: 10px;
         }
@@ -232,7 +243,8 @@
             .nav-menu { flex-wrap: nowrap; }
             .nav-menu a { margin-left: 15px; font-size: 13px; }
             .nav-menu span { margin-left: 15px; }
-            .hero { padding: 100px 20px 60px; }
+            .hero-container { padding: 0 20px; } /* 반응형에서도 컨테이너 패딩 적용 */
+            .hero { padding: 100px 0 60px; }
             .hero-title { font-size: 42px; letter-spacing: -1px; }
             .hero p { font-size: 16px; }
             .service-section { padding: 60px 20px; }
@@ -280,17 +292,19 @@
             </nav>
         </header>
 
-        <!-- Hero Section -->
+        <!-- Hero Section [수정됨: 전체 격자무늬] -->
         <section class="hero">
-            <span class="hero-label">2026 1st SEMESTER PLAN</span>
-            <h1 class="hero-title">
-                오늘의 기록이<br>
-                <span>내일의 역사</span>가 됩니다.
-            </h1>
-            <p>
-                좋은 학사생도의 하루는 철저한 계획과 실천에서 시작됩니다.<br>
-                목표를 향해 나아가는 당신의 모든 순간에 엘로힘 하나님의 축복이 임하기를 바랍니다.
-            </p>
+            <div class="hero-container">
+                <span class="hero-label">2026 1st SEMESTER PLAN</span>
+                <h1 class="hero-title">
+                    오늘의 기록이<br>
+                    <span>내일의 역사</span>가 됩니다.
+                </h1>
+                <p>
+                    좋은 학사생도의 하루는 철저한 계획과 실천에서 시작됩니다.<br>
+                    목표를 향해 나아가는 당신의 모든 순간에 엘로힘 하나님의 축복이 임하기를 바랍니다.
+                </p>
+            </div>
         </section>
 
         <!-- Service Grid -->
@@ -412,7 +426,23 @@
         async function addPost() {
             const d=document.getElementById('pDate').value, t=document.getElementById('pTopic').value, tg=document.getElementById('pTarget').value;
             if(!d||!t||!tg) { alert('필수입력'); return; }
-            await addDoc(collection(db,"presentations"),{date:d, topic:t, target:tg, isTruth:document.getElementById('chkTruth').checked, isMis:document.getElementById('chkMis').checked, createdAt:new Date()});
+            
+            // [수정됨: 작성자 ID 저장]
+            const user = auth.currentUser;
+            let userId = "Unknown";
+            if (user && user.email) {
+                userId = user.email.split('@')[0]; // 이메일 @ 앞부분만 ID로 사용
+            }
+            
+            await addDoc(collection(db,"presentations"),{
+                date:d, 
+                topic:t, 
+                target:tg, 
+                isTruth:document.getElementById('chkTruth').checked, 
+                isMis:document.getElementById('chkMis').checked, 
+                userId: userId, // 작성자 ID 저장
+                createdAt:new Date()
+            });
             loadPosts();
         }
         
@@ -426,7 +456,11 @@
                     const d=doc.data();
                     let tag = d.isTruth ? '<span class="post-tag tag-purple">진리발표</span>' : '';
                     if(d.isMis) tag += '<span class="post-tag tag-purple" style="background:rgba(255,0,0,0.1);color:#d32f2f;">오해와 진실</span>';
-                    b.insertAdjacentHTML('beforeend', `<div class="post-item"><div class="post-header"><div>${tag}</div><div><span class="post-date">${d.date}</span><button class="btn-delete" onclick="deletePost('${doc.id}')">삭제</button></div></div><div class="post-subject">${d.topic}</div><div class="post-target">대상: <span>${d.target}</span></div></div>`);
+                    
+                    // [수정됨: 작성자 표시 추가]
+                    const authorDisplay = d.userId ? `<span class="post-author">작성자: ${d.userId}</span>` : '';
+
+                    b.insertAdjacentHTML('beforeend', `<div class="post-item"><div class="post-header"><div>${tag}</div><div><span class="post-date">${d.date}</span>${authorDisplay}<button class="btn-delete" onclick="deletePost('${doc.id}')">삭제</button></div></div><div class="post-subject">${d.topic}</div><div class="post-target">대상: <span>${d.target}</span></div></div>`);
                 });
             } catch(e) { b.innerHTML='오류 발생'; }
         }
