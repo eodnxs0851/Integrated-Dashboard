@@ -78,16 +78,16 @@
         .nav-menu a:hover { color: var(--k-black); }
         .nav-menu span { font-size: 14px; font-weight: 600; color: var(--k-gray-dark); margin-left: 24px; cursor: pointer; transition: color 0.2s; }
 
-        /* [Hero Section - OPTION 1: Grid Pattern] */
+        /* [Hero Section - 격자 디자인 적용됨] */
         .hero { 
             padding: 160px 40px 100px; 
             max-width: 1200px; 
             margin: 0 auto;
             position: relative;
-            /* 배경 패턴 추가 */
+            /* 배경 격자 패턴 (Grid Pattern) */
             background-image: 
-                linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+                linear-gradient(to right, rgba(0,0,0,0.06) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px);
             background-size: 40px 40px; /* 격자 크기 */
         }
         /* 텍스트 가독성을 위해 하단 그라데이션 추가 */
@@ -142,9 +142,20 @@
         .section-header h2 { font-size: 32px; font-weight: 800; word-break: keep-all;}
         .section-header p { margin-top: 10px; color: var(--k-gray-light); word-break: keep-all; }
         .vision-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-        .quote-box { background: var(--k-black); color: var(--k-white); padding: 40px; border-radius: 0; }
-        .quote-box h3 { font-size: 20px; color: var(--k-yellow); margin-bottom: 20px; }
-        .quote-text { font-size: 18px; line-height: 1.8; font-weight: 300; opacity: 0.9; word-break: keep-all; }
+        
+        /* [Quote Box] */
+        .quote-box { background: var(--k-black); color: var(--k-white); padding: 40px; border-radius: 0; display: flex; flex-direction: column; justify-content: space-between; transition: opacity 0.3s ease; }
+        .quote-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
+        .quote-box h3 { font-size: 20px; color: var(--k-yellow); margin: 0; font-weight: 800; letter-spacing: -0.5px; }
+        
+        /* 화살표 아이콘 스타일 */
+        .quote-arrows { color: #555; font-size: 20px; display: flex; gap: 15px; }
+        .quote-arrows i { cursor: pointer; transition: color 0.2s; }
+        .quote-arrows i:hover { color: var(--k-white); }
+
+        .quote-text { font-size: 18px; line-height: 1.8; font-weight: 300; opacity: 0.9; word-break: keep-all; margin-bottom: 40px; }
+        .quote-source { text-align: right; font-size: 14px; color: #666; font-weight: 500; margin-top: auto; }
+
         .stats-row { display: flex; justify-content: space-between; margin-top: 40px; padding: 30px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
         .stat-item { text-align: center; flex: 1; }
         .stat-num { font-size: 40px; font-weight: 800; display: block; margin-bottom: 5px; }
@@ -306,10 +317,20 @@
         <!-- Vision & Goals -->
         <section class="vision-section">
             <div class="vision-grid">
-                <div class="quote-box">
-                    <h3>MAIN WORDS</h3>
-                    <p class="quote-text">"오늘이 중요합니다. 예비하고 있으라, 생각지 않은 날 오신다 하셨으니 많이 사랑하고 사랑의 열매를 많이 맺어 하나님을 기쁘시게 해드리는 자녀들이 되시기 바랍니다."</p>
+                <!-- [인용구 박스 (슬라이드 기능 적용)] -->
+                <div class="quote-box" id="quoteContainer">
+                    <div class="quote-header">
+                        <h3 id="quoteTitle">MAIN WORDS</h3>
+                        <div class="quote-arrows">
+                            <i class="fa-solid fa-chevron-left" onclick="changeQuote('prev')"></i>
+                            <i class="fa-solid fa-chevron-right" onclick="changeQuote('next')"></i>
+                        </div>
+                    </div>
+                    <p class="quote-text" id="quoteText">"오늘이 중요합니다. 예비하고 있으라, 생각지 않은 날 오신다 하셨으니 많이 사랑하고 사랑의 열매를 많이 맺어 하나님을 기쁘시게 해드리는 자녀들이 되시기 바랍니다."</p>
+                    <p class="quote-source" id="quoteSource">- 하늘 어머니 말씀</p>
                 </div>
+                <!-- [//인용구 박스 끝] -->
+
                 <div>
                     <div class="section-header" style="margin-bottom: 30px;">
                         <h2>Semester Goals</h2>
@@ -414,6 +435,36 @@
         window.closeModal = function() { mOverlay.style.opacity='0'; mContent.style.transform='translateY(30px)'; setTimeout(()=>{mOverlay.style.display='none';document.body.classList.remove('modal-active');},300); }
         function showModalAnim() { document.body.classList.add('modal-active'); mOverlay.style.display='flex'; setTimeout(()=>{mOverlay.style.opacity='1';mContent.style.transform='translateY(0)';},10); }
         mOverlay.addEventListener('click', e=>{if(e.target===mOverlay)window.closeModal();});
+
+        // [Quote Slider Logic]
+        const quoteData = [
+            {
+                title: "MAIN WORDS",
+                text: "\"오늘이 중요합니다. 예비하고 있으라, 생각지 않은 날 오신다 하셨으니 많이 사랑하고 사랑의 열매를 많이 맺어 하나님을 기쁘시게 해드리는 자녀들이 되시기 바랍니다.\"",
+                source: "- 하늘 어머니 말씀"
+            },
+            {
+                title: "MINDSET",
+                text: "\"증인이 끝까지 그 길을 걸어가는 것은요, 그 증인 자신의 힘이 아니라, 그 중심에 계신 하나님의 도우심에 달려 있습니다. 내가 너무 힘들고 지치고 어렵다는 생각이 들어도, 내 안에 아버지의 사랑이, 어머니의 은혜가, 그리고 어머니께서 환하게 웃으시며 나를 바라보셨던 그 미소 하나만 있어도요, 내 속이 불이 붙습니다. 오히려 가만히 있으면 그게 더 힘들어져요. 그런 사람이 되기 위해서, 우리는 평상시에 말씀으로 마음을 많이 채우고, 기도 많이 해야 합니다.\"",
+                source: "- 교육 '증인의 길'"
+            }
+        ];
+        let currentQuoteIdx = 0;
+        
+        window.changeQuote = function(dir) {
+            if(dir === 'next') currentQuoteIdx = (currentQuoteIdx + 1) % quoteData.length;
+            else if(dir === 'prev') currentQuoteIdx = (currentQuoteIdx - 1 + quoteData.length) % quoteData.length;
+            
+            const container = document.getElementById('quoteContainer');
+            container.style.opacity = '0.5';
+            
+            setTimeout(() => {
+                document.getElementById('quoteTitle').innerText = quoteData[currentQuoteIdx].title;
+                document.getElementById('quoteText').innerText = quoteData[currentQuoteIdx].text;
+                document.getElementById('quoteSource').innerText = quoteData[currentQuoteIdx].source;
+                container.style.opacity = '1';
+            }, 200);
+        }
     </script>
 </body>
 </html>
